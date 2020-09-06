@@ -1,0 +1,59 @@
+/* How many orders were shipped by Speedy Express in total? */
+/* 54 */
+
+SELECT COUNT(OrderID) 
+  FROM Orders AS o
+       JOIN Shippers AS s
+       ON o.ShipperID = s.ShipperID 
+ WHERE ShipperName = 'Speedy Express';
+
+
+
+/* What is the last name of the employee with the most orders? */
+/* Peacock */
+
+SELECT COUNT(OrderID), o.EmployeeID, e.LastName 
+  FROM Orders AS o
+       JOIN Employees AS e
+       ON o.EmployeeID = e.EmployeeID 
+ GROUP BY o.EmployeeID 
+ ORDER BY Count(OrderID) DESC 
+ LIMIT 1;
+
+
+
+/* What product was ordered the most by customers in Germany? */
+/* Product ID 40 */
+
+SELECT SUM(Quantity), ProductID 
+  FROM OrderDetails
+ WHERE OrderID IN 
+       (SELECT OrderID 
+          FROM Customers AS c
+               JOIN Orders AS o
+               ON c.CustomerID = o.CustomerID 
+         WHERE c.Country = 'Germany') 
+ GROUP BY ProductID 
+ ORDER BY SUM(Quantity) DESC 
+ LIMIT 1;
+
+
+
+/* We can get more product information using the below query - used WITH statement as oppose to an additional subquery for readability */
+
+WITH germany_product AS (SELECT SUM(Quantity), ProductID 
+                           FROM OrderDetails 
+                          WHERE OrderID IN 
+                                (SELECT OrderID
+                                   FROM Customers AS c
+                                        JOIN Orders AS o
+                                        ON c.CustomerID = o.CustomerID 
+                                  WHERE c.Country = 'Germany') 
+                          GROUP BY ProductID 
+                          ORDER BY SUM(Quantity) DESC 
+                          LIMIT 1)
+SELECT *
+  FROM Products 
+ WHERE ProductID = 
+       (SELECT ProductID 
+          FROM germany_product);
